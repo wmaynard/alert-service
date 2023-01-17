@@ -12,13 +12,15 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="platform-csharp-common" Version="1.2.56" />
+	  <PackageReference Include="platform-csharp-common" Version="1.2.61" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Models" />
 	  <Folder Include="Services" />
-	  <Folder Include="Utilities" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\platform-csharp-common\platform-csharp-common.csproj" />
 	</ItemGroup>
 
 </Project>

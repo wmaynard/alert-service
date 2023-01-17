@@ -2,7 +2,7 @@ using RCL.Logging;
 using Rumble.Platform.Common.Enums;
 using Rumble.Platform.Common.Web;
 
-namespace Alert;
+namespace AlertService;
 
 public class Startup : PlatformStartup
 {

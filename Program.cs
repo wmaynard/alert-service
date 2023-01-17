@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
-using Alert;
+using AlertService;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 
