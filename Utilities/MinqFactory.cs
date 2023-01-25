@@ -6,7 +6,7 @@ using MongoDB.Driver;
 using Rumble.Platform.Common.Utilities;
 using Rumble.Platform.Data;
 
-namespace AlertService.Utilities;
+namespace AlertingService.Utilities;
 
 
 
