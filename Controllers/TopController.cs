@@ -1,18 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Dynamic;
 using AlertingService.Models;
-using AlertingService.Utilities;
-using AlertingService.Utilities.Minq;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Driver;
-using RCL.Logging;
-using Rumble.Platform.Common.Attributes;
-using Rumble.Platform.Common.Exceptions.Mongo;
-using Rumble.Platform.Common.Services;
 using Rumble.Platform.Common.Utilities;
 using Rumble.Platform.Common.Web;
-using Rumble.Platform.Data;
 using AlertingService.Services;
 
 namespace AlertingService.Controllers;

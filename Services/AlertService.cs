@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AlertingService.Utilities.Minq;
 using AlertingService.Models;
 using RCL.Logging;
 using Rumble.Platform.Common.Exceptions;
