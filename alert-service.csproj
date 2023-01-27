@@ -19,4 +19,8 @@
 	  <ProjectReference Include="..\platform-csharp-common\platform-csharp-common.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Utilities" />
+	</ItemGroup>
+
 </Project>
