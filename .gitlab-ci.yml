@@ -55,7 +55,7 @@ build_app:
     - dotnet nuget add source --username $BOT_USER --password $BOT_PAT --store-password-in-clear-text --name tower "$CI_SERVER_URL/api/v4/groups/6/-/packages/nuget/index.json"
     - dotnet restore
     - dotnet build --no-restore --configuration Release
-    - CURRENTVERSION="$(dotnet ./bin/Release/net6.0/leaderboard-service.dll -version | cut -d':' -f2)"
+    - CURRENTVERSION="$(dotnet ./bin/Release/net6.0/alert-service.dll -version | cut -d':' -f2)"
     - git tag $CURRENTVERSION; git push https://$BOT_USER:${BOT_PAT}@gitlab.cdrentertainment.com/platform-services/$CI_PROJECT_NAME.git --tags
     - echo "$CURRENTVERSION"
     - wget https://github.com/aquasecurity/trivy/releases/download/v0.27.1/trivy_0.27.1_Linux-64bit.tar.gz
