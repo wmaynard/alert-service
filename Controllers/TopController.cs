@@ -1,3 +1,4 @@
+using System;
 using AlertingService.Models;
 using Microsoft.AspNetCore.Mvc;
 using Rumble.Platform.Common.Utilities;
@@ -15,26 +16,33 @@ public class TopController : PlatformController
     public TopController(AlertService a) => _alerts = a;
 
     [HttpPost]
-    public ActionResult Slack()
+    public ActionResult UpsertAlert()
     {
         Alert alert = Require<Alert>("alert");
+        Alert existing = _alerts.FindLastAlert(alert);
 
-        Alert existing = _alerts.FindLastAlert(alert.Message);
-
-        // The previous alert is too old; it's time to insert a new one.
-        if (existing == null || existing.CreatedOn < Timestamp.UnixTime - alert.Trigger.Timeframe)
+        if (existing == null)
         {
+            alert.Trigger.Count++;
             _alerts.Insert(alert);
             return Ok(alert);
         }
-        else
+
+        switch (existing.Status)
         {
-            existing.Trigger.Count++;
-            _alerts.Update(existing);
-            return Ok(existing);
+            case Alert.AlertStatus.New:
+            case Alert.AlertStatus.Sent:
+            case Alert.AlertStatus.Acknowledged:
+            case Alert.AlertStatus.Escalated:
+                existing.Trigger.Count++;
+                _alerts.Update(existing);
+                return Ok(existing);
+            case Alert.AlertStatus.Resolved:
+            case Alert.AlertStatus.Canceled:
+            default:
+                _alerts.Insert(alert);
+                return Ok(alert);
         }
-        
-        return Ok();
     }
 
     [HttpPatch, Route("snooze")]

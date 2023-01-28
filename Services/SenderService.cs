@@ -7,6 +7,7 @@ using Rumble.Platform.Common.Minq;
 using Rumble.Platform.Common.Models.Alerting;
 using Rumble.Platform.Common.Services;
 using Rumble.Platform.Common.Utilities;
+using Rumble.Platform.Data;
 
 namespace AlertingService.Services;
 
@@ -33,18 +34,21 @@ public class SenderService : MinqTimerService<Alert>
                 .GreaterThanOrEqualToRelative(alert => alert.Trigger.Count, alert => alert.Trigger.CountRequired)
             )
             .ToList();
+        
+        Log.Local(Owner.Will, $"Found {outbox.Count} alerts to send.");
 
         foreach (Alert toSend in outbox)
         {
             switch (toSend.Status)
             {
-                case Alert.AlertStatus.Unsent:
+                case Alert.AlertStatus.New:
                     Send(toSend);
                     break;
                 case Alert.AlertStatus.Acknowledged:
                 case Alert.AlertStatus.Sent:
                 case Alert.AlertStatus.Escalated:
                     toSend.Escalate();
+                    Send(toSend);
                     break;
                 case Alert.AlertStatus.Resolved:
                 case Alert.AlertStatus.Canceled:
@@ -61,18 +65,25 @@ public class SenderService : MinqTimerService<Alert>
     {
         try
         {
-            if (alert.Type == Alert.AlertType.All)
+            switch (alert.Type)
             {
-                SendToSlack(alert);
-                SendEmail(alert);
+                case Alert.AlertType.All:
+                    SendToSlack(alert);
+                    SendEmail(alert);
+                    break;
+                case Alert.AlertType.Slack:
+                    SendToSlack(alert);
+                    break;
+                case Alert.AlertType.Email:
+                default:
+                    SendEmail(alert);
+                    break;
             }
-            else if (alert.Type == Alert.AlertType.Slack)
-                SendToSlack(alert);
-            else
-                SendEmail(alert);
             
             alert.LastSent = Timestamp.UnixTime;
-            alert.Status = Alert.AlertStatus.Sent;
+            if (alert.Status == Alert.AlertStatus.New)
+                alert.Status = Alert.AlertStatus.Sent;
+            alert.SendAfter = Timestamp.UnixTime + Alert.SECONDS_BEFORE_ESCALATION;
         }
         catch (Exception e)
         {
@@ -109,5 +120,33 @@ public class SenderService : MinqTimerService<Alert>
             })
             .Post();
     }
-    private void SendEmail(Alert alert) { }
+
+    private void SendEmail(Alert alert)
+    {
+        string none = _config.Require<string>("emailDefault");
+        string first = _config.Require<string>("emailFirstEscalation");
+        string final = _config.Require<string>("emailSecondEscalation");
+        
+        string email = alert.Escalation switch
+        {
+            Alert.EscalationLevel.None => none,
+            Alert.EscalationLevel.First => first,
+            Alert.EscalationLevel.Final => final,
+            _ => none
+        };
+        
+        _api
+            .Request(PlatformEnvironment.Url("dmz/alert"))
+            .AddAuthorization(_config.AdminToken)
+            .SetPayload(new RumbleJson
+            {
+                { "email", email },
+                { "alert", alert.JSON }
+            })
+            .OnFailure(response =>
+            {
+                Log.Error(Owner.Will, "");
+            })
+            .Post();
+    }
 }
