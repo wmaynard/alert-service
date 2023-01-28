@@ -1,0 +1,104 @@
+image: alpine:latest
+
+variables:
+  # KUBE_INGRESS_BASE_DOMAIN is the application deployment domain and should be set as a variable at the group or project level.
+  KUBE_INGRESS_BASE_DOMAIN: nonprod.tower.cdrentertainment.com
+  HELM_SCALE_EXTRA_ARGS: --set postgresql.enabled="false"
+
+  # from gitlab project ci variables - normally env specific
+  K8S_SECRET_RUMBLE_COMPONENT: "$RUMBLE_COMPONENT"
+  K8S_SECRET_RUMBLE_DEPLOYMENT: "$RUMBLE_DEPLOYMENT"
+  K8S_SECRET_MONGODB_URI: "$MONGODB_URI"
+  K8S_SECRET_SLACK_LOG_CHANNEL: "$SLACK_LOG_CHANNEL"
+  
+  # Common Platform CI variables - contains information for several environments,
+  # parsed by PlatformEnvironment.
+  K8S_SECRET_PLATFORM_COMMON: "$PLATFORM_COMMON"
+  K8S_SECRET_COMMIT_SHA: "$CI_COMMIT_SHA"
+  
+  # Overrides for Platform Common CI
+  # These variables are not inherently necessary for your project to run successfully in environments.  A value from these will always come from PLATFORM_COMMON.
+  # However, you may want to override them.  Listing them here in the yml removes one step from the maintenance if you need to.
+  # In gitlab's CI settings, add a value with any of these keys to override the inherited variables from the PLATFORM_COMMON group var.
+  
+  DOCKER_DRIVER: overlay2
+
+  ROLLOUT_RESOURCE_TYPE: deployment
+  DEPLOY_TYPE: "kubernetes"
+
+  DOCKER_TLS_CERTDIR: ""  # https://gitlab.com/gitlab-org/gitlab-runner/issues/4501
+
+stages:
+  - app_build
+  - build
+  - scan
+  - deploy  # dummy stage to follow the template guidelines
+  - dev
+  - staging
+  - production
+  - performance
+  - cleanup
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - when: always
+
+build_app:
+  stage: app_build
+  image: mcr.microsoft.com/dotnet/sdk:6.0
+  allow_failure: false
+  script:
+    - dotnet nuget add source --username $BOT_USER --password $BOT_PAT --store-password-in-clear-text --name gitlab "https://gitlab.cdrentertainment.com/api/v4/projects/14/packages/nuget/index.json"
+    - dotnet nuget add source --username $BOT_USER --password $BOT_PAT --store-password-in-clear-text --name platform "$CI_SERVER_URL/api/v4/groups/5/-/packages/nuget/index.json"
+    - dotnet nuget add source --username $BOT_USER --password $BOT_PAT --store-password-in-clear-text --name tower "$CI_SERVER_URL/api/v4/groups/6/-/packages/nuget/index.json"
+    - dotnet restore
+    - dotnet build --no-restore --configuration Release
+    - CURRENTVERSION="$(dotnet ./bin/Release/net6.0/leaderboard-service.dll -version | cut -d':' -f2)"
+    - git tag $CURRENTVERSION; git push https://$BOT_USER:${BOT_PAT}@gitlab.cdrentertainment.com/platform-services/$CI_PROJECT_NAME.git --tags
+    - echo "$CURRENTVERSION"
+    - wget https://github.com/aquasecurity/trivy/releases/download/v0.27.1/trivy_0.27.1_Linux-64bit.tar.gz
+    - tar -zxvf trivy*
+    - chmod +x $CI_PROJECT_DIR/trivy
+    - ./trivy --cache-dir $CI_PROJECT_DIR/.trivycache fs --severity HIGH,CRITICAL --security-checks vuln .
+  artifacts:
+    paths:
+      - bin/Release/net6.0/*
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - when: always
+
+build_image:
+  stage: build
+  allow_failure: false
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - mkdir -p /kaniko/.docker
+    - mkdir -p $CI_PROJECT_DIR/trivy
+    - mkdir -p $CI_PROJECT_DIR/.trivycache
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(echo -n ${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD} | base64)\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG:$CI_COMMIT_SHA --destination $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG:latest
+    - cd $CI_PROJECT_DIR/trivy
+    - wget https://github.com/aquasecurity/trivy/releases/download/v0.27.1/trivy_0.27.1_Linux-64bit.tar.gz
+    - tar -zxvf trivy*
+    - chmod +x $CI_PROJECT_DIR/trivy
+    - ./trivy --cache-dir $CI_PROJECT_DIR/.trivycache image --severity HIGH,CRITICAL $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG:$CI_COMMIT_SHA
+  rules:
+    - if: '$BUILD_DISABLED'
+      when: never
+    - if: $DEPLOY_TYPE == "beanstalk"
+      when: never
+    - if: $CI_COMMIT_TAG
+      when: never
+    - if: $DEPLOY_TYPE == "kubernetes" || $DEPLOY_TYPE == "both"
+      when: on_success
+  needs:
+    - job: build_app
+      artifacts: true
+
+include:
+  - '/.gitlab/deploy-k8s.yaml'
