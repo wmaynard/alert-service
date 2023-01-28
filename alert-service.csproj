@@ -2,13 +2,16 @@
 
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
-		<AssemblyName>dmz-service</AssemblyName>
 		<AssemblyVersion>1.0.*</AssemblyVersion>
 		<Deterministic>false</Deterministic>
 		<RootNamespace>AlertingService</RootNamespace>
 		<LangVersion>10</LangVersion>
 		<Configurations>Debug;Release;Local</Configurations>
 		<Platforms>AnyCPU</Platforms>
+		<PackageId>alert-service</PackageId>
+		<Authors>alert-service</Authors>
+		<Company>alert-service</Company>
+		<Product>alert-service</Product>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -28,4 +31,5 @@
 	  <Content Include=".gitlab\stage-b.values.yaml" />
 	  <Content Include=".gitlab\stage-c.values.yaml" />
 	</ItemGroup>
+
 </Project>
