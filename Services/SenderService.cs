@@ -11,13 +11,14 @@ using Rumble.Platform.Data;
 
 namespace AlertingService.Services;
 
-
 public class SenderService : MinqTimerService<Alert>
 {
+    private const int CYCLE_TIME = 5_000;
+    
     private readonly DynamicConfig _config;
     private readonly ApiService _api;
     
-    public SenderService(DynamicConfig config, ApiService api) : base("alerts", 5_000)
+    public SenderService(DynamicConfig config, ApiService api) : base("alerts", CYCLE_TIME)
     {
         _config = config;
         _api = api;
@@ -41,7 +42,8 @@ public class SenderService : MinqTimerService<Alert>
         {
             switch (toSend.Status)
             {
-                case Alert.AlertStatus.New:
+                case Alert.AlertStatus.Pending:
+                case Alert.AlertStatus.PendingResend:
                     Send(toSend);
                     break;
                 case Alert.AlertStatus.Acknowledged:
@@ -58,6 +60,22 @@ public class SenderService : MinqTimerService<Alert>
             
             Log.Local(Owner.Will, $"{toSend}", emphasis: Log.LogType.CRITICAL);
             Update(toSend);
+        }
+
+        try
+        {
+            mongo
+                .OnRecordsAffected(result => Log.Local(Owner.Will, $"{result.Affected} alerts closed."))
+                .Where(query => query
+                    .EqualTo(alert => alert.Status, Alert.AlertStatus.Pending)
+                    .LessThanRelative(alert => alert.Trigger.Count, alert => alert.Trigger.CountRequired)
+                    .LessThan(alert => alert.Expiration, Timestamp.UnixTime - (CYCLE_TIME * 3)) // allow a grace period to guarantee we don't close alerts too early.
+                )
+                .Update(query => query.Set(alert => alert.Status, Alert.AlertStatus.TriggerNotMet));
+        }
+        catch (Exception e)
+        {
+            Log.Error(Owner.Will, "Unable to close alerts.", exception: e);
         }
     }
 
@@ -81,8 +99,12 @@ public class SenderService : MinqTimerService<Alert>
             }
             
             alert.LastSent = Timestamp.UnixTime;
-            if (alert.Status == Alert.AlertStatus.New)
-                alert.Status = Alert.AlertStatus.Sent;
+            alert.Status = alert.Status switch
+            {
+                Alert.AlertStatus.Pending => Alert.AlertStatus.Sent,
+                Alert.AlertStatus.PendingResend => Alert.AlertStatus.Escalated,
+                _ => alert.Status
+            };
             alert.SendAfter = Timestamp.UnixTime + Alert.SECONDS_BEFORE_ESCALATION;
         }
         catch (Exception e)
@@ -90,7 +112,7 @@ public class SenderService : MinqTimerService<Alert>
             Log.Error(Owner.Will, "Unable to send alert.", data: new
             {
                 Alert = alert.ToString()
-            });
+            }, exception: e);
         }
     }
 
