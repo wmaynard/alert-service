@@ -106,6 +106,10 @@ public class SenderService : MinqTimerService<Alert>
                 _ => alert.Status
             };
             alert.SendAfter = Timestamp.UnixTime + Alert.SECONDS_BEFORE_ESCALATION;
+            Log.Error(alert.Owner, $"Alert sent: {alert.Message}", data: new RumbleJson
+            {
+                { "trigger", alert.Trigger }
+            });
         }
         catch (Exception e)
         {
