@@ -1,5 +1,4 @@
 using System;
-using AlertingService.Models;
 using Microsoft.AspNetCore.Mvc;
 using Rumble.Platform.Common.Utilities;
 using Rumble.Platform.Common.Web;
