@@ -26,6 +26,7 @@ dev:
   variables:
     KUBE_INGRESS_BASE_DOMAIN: nonprod.tower.cdrentertainment.com
     KUBE_NAMESPACE: "alert-service-dev"
+    K8S_SECRET_RUMBLE_REGION: "US"
   tags:
     - cluster
   environment:
@@ -38,6 +39,7 @@ stage-a:
   variables:
     KUBE_INGRESS_BASE_DOMAIN: nonprod.tower.cdrentertainment.com
     KUBE_NAMESPACE: "alert-service-stage-a"
+    K8S_SECRET_RUMBLE_REGION: "US"
   tags:
     - cluster
   environment:
@@ -50,6 +52,7 @@ stage-b:
   variables:
     KUBE_INGRESS_BASE_DOMAIN: nonprod.tower.cdrentertainment.com
     KUBE_NAMESPACE: "alert-service-stage-b"
+    K8S_SECRET_RUMBLE_REGION: "US"
   tags:
     - cluster
   environment:
@@ -63,6 +66,7 @@ TT-production-a1:
     KUBE_CONTEXT: "platform-services/platform-services-agent:prod-a1-platform-services"
     KUBE_INGRESS_BASE_DOMAIN: prod.tower.rumblegames.com
     KUBE_NAMESPACE: "alert-service"
+    K8S_SECRET_RUMBLE_REGION: "US"
   tags:
     - production-a1
   environment:
@@ -76,6 +80,7 @@ TT-production-a1-apse1:
     KUBE_CONTEXT: "platform-services/platform-services-agent:prod-a1-apse1-platform-services"
     KUBE_INGRESS_BASE_DOMAIN: prod.tower.rumblegames.com
     KUBE_NAMESPACE: "alert-service"
+    K8S_SECRET_RUMBLE_REGION: "AP"
   tags:
     - production-a1-apse1
   environment:
@@ -89,6 +94,7 @@ TT-production-a2:
     KUBE_CONTEXT: "platform-services/platform-services-agent:prod-a2-platform-services"
     KUBE_INGRESS_BASE_DOMAIN: prod.tower.rumblegames.com
     KUBE_NAMESPACE: "alert-service"
+    K8S_SECRET_RUMBLE_REGION: "US"
   tags:
     - production-a2
   environment:
@@ -102,6 +108,7 @@ TT-production-a2-apse1:
     KUBE_CONTEXT: "platform-services/platform-services-agent:prod-a2-apse1-platform-services"
     KUBE_INGRESS_BASE_DOMAIN: prod.tower.rumblegames.com
     KUBE_NAMESPACE: "alert-service"
+    K8S_SECRET_RUMBLE_REGION: "AP"
   tags:
     - production-a2-apse1
   environment:
