@@ -55,7 +55,7 @@ stage-a-apse1:
   variables:
     KUBE_INGRESS_BASE_DOMAIN: nonprod.tower.cdrentertainment.com
     KUBE_CONTEXT: "platform-services/platform-services-agent:nonprod-apse1"
-    KUBE_NAMESPACE: "alert-service-stage-b"
+    KUBE_NAMESPACE: "alert-service-stage-a"
     K8S_SECRET_RUMBLE_REGION: "AP"
   tags:
     - nonprod-apse1
