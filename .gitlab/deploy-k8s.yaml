@@ -47,6 +47,22 @@ stage-a:
     name: stage-a
     url: https://stage-a.nonprod.tower.cdrentertainment.com/
 
+
+stage-a-apse1:
+  extends: .auto-deploy
+  stage: staging
+  needs: ["dev"]
+  variables:
+    KUBE_INGRESS_BASE_DOMAIN: nonprod.tower.cdrentertainment.com
+    KUBE_CONTEXT: "platform-services/platform-services-agent:nonprod-apse1"
+    KUBE_NAMESPACE: "alert-service-stage-b"
+    K8S_SECRET_RUMBLE_REGION: "AP"
+  tags:
+    - nonprod-apse1
+  environment:
+    name: stage-a
+    url: https://stage-a.nonprod.tower.cdrentertainment.com/
+
 stage-b:
   extends: .auto-deploy
   stage: staging
