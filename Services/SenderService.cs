@@ -149,6 +149,9 @@ public class SenderService : MinqTimerService<Alert>
 
     private void SendEmail(Alert alert)
     {
+        if (_config.Optional<bool>("emailsDisabled"))
+            return;
+        
         string none = _config.Require<string>("emailDefault");
         string first = _config.Require<string>("emailFirstEscalation");
         string final = _config.Require<string>("emailSecondEscalation");
