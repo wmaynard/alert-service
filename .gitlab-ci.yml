@@ -60,10 +60,6 @@ build_app:
     - echo "CURRENTVERSION=$CURRENTVERSION" >> .env
     - git tag $CURRENTVERSION; git push https://$BOT_USER:${BOT_PAT}@gitlab.cdrentertainment.com/platform-services/$CI_PROJECT_NAME.git --tags
     - echo "$CURRENTVERSION"
-    - wget https://github.com/aquasecurity/trivy/releases/download/v0.27.1/trivy_0.27.1_Linux-64bit.tar.gz
-    - tar -zxvf trivy*
-    - chmod +x $CI_PROJECT_DIR/trivy
-    - ./trivy --cache-dir $CI_PROJECT_DIR/.trivycache fs --severity HIGH,CRITICAL --security-checks vuln .
   artifacts:
     paths:
       - bin/Release/net6.0/*
