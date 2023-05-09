@@ -13,7 +13,7 @@ namespace AlertingService.Services;
 
 public class SenderService : MinqTimerService<Alert>
 {
-    private const int CYCLE_TIME = 5_000;
+    private const int CYCLE_TIME = 60_000;
     
     private readonly DynamicConfig _config;
     private readonly ApiService _api;
