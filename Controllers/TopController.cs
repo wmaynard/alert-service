@@ -86,7 +86,7 @@ public class TopController : PlatformController
         return Ok(alert);
     }
 
-    [HttpPatch, Route("cancel")]
+    [HttpGet, Route("cancel")]
     public ActionResult Cancel()
     {
         Alert alert = _alerts.FromId(Require<string>("id"));
