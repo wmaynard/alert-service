@@ -26,10 +26,11 @@ public class SenderService : MinqTimerService<Alert>
 
     protected override void OnElapsed()
     {
+        // TODO: If we shift entirely to a pagerduty integration, we should refactor this to be cleaner
         List<Alert> outbox = mongo
             .WithTransaction(out Transaction ta)
             .Where(query => query
-                .NotContainedIn(alert => alert.Status, new [] { Alert.AlertStatus.Resolved, Alert.AlertStatus.Canceled })
+                .NotContainedIn(alert => alert.Status, new [] { Alert.AlertStatus.Sent, Alert.AlertStatus.Resolved, Alert.AlertStatus.Canceled })
                 .NotEqualTo(alert => alert.Escalation, Alert.EscalationLevel.Final) // Should we re-notify?
                 .LessThanOrEqualTo(alert => alert.SendAfter, Timestamp.UnixTime)
                 .GreaterThanOrEqualToRelative(alert => alert.Trigger.Count, alert => alert.Trigger.CountRequired)
