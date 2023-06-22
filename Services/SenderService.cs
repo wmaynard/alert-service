@@ -35,7 +35,7 @@ public class SenderService : MinqTimerService<Alert>
                 .GreaterThanOrEqualToRelative(alert => alert.Trigger.Count, alert => alert.Trigger.CountRequired)
             )
             .ToList();
-        
+
         Log.Local(Owner.Will, $"Found {outbox.Count} alerts to send.");
 
         foreach (Alert toSend in outbox)
@@ -44,14 +44,17 @@ public class SenderService : MinqTimerService<Alert>
             {
                 case Alert.AlertStatus.Pending:
                 case Alert.AlertStatus.PendingResend:
-                    Send(toSend);
-                    break;
                 case Alert.AlertStatus.Acknowledged:
-                case Alert.AlertStatus.Sent:
                 case Alert.AlertStatus.Escalated:
-                    toSend.Escalate();
-                    Send(toSend);
+                    PagerDutyIncident incident = PagerDuty.CreateIncident(toSend);
+                    if (incident == null)
+                        Log.Warn(Owner.Will, "Potentially failed to create PD incident; requires investigation.", data: new
+                        {
+                            Alert = toSend
+                        });
+                    toSend.Status = Alert.AlertStatus.Sent;
                     break;
+                case Alert.AlertStatus.Sent:
                 case Alert.AlertStatus.Resolved:
                 case Alert.AlertStatus.Canceled:
                 default:
