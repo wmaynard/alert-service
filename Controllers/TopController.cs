@@ -122,7 +122,5 @@ public class TopController : PlatformController
 
             return Ok(submitted);
         }
-
-        return Ok();
     }
 }
