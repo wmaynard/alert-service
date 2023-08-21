@@ -16,7 +16,8 @@ lifecycle: {}
 # preStop:
 #   exec:
 #     command: ["/bin/sh", "-c", "sleep 10"]
-podAnnotations: {}
+pod
+Annotations: {}
 nodeSelector: {}
 affinity: {}
 tolerations: []
@@ -63,6 +64,8 @@ ingress:
     secretName: "alert-service-prod"
     useDefaultSecret: false
   annotations:
+    nginx.ingress.kubernetes.io/client-body-buffer-size: 1m
+    nginx.ingress.kubernetes.io/service-upstream: "true"
   modSecurity:
     enabled: false
     secRuleEngine: "DetectionOnly"
