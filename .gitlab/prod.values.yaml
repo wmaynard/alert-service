@@ -16,8 +16,7 @@ lifecycle: {}
 # preStop:
 #   exec:
 #     command: ["/bin/sh", "-c", "sleep 10"]
-pod
-Annotations: {}
+podAnnotations: {}
 nodeSelector: {}
 affinity: {}
 tolerations: []
