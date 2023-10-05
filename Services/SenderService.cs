@@ -47,7 +47,12 @@ public class SenderService : MinqTimerService<Alert>
                 case Alert.AlertStatus.PendingResend:
                 case Alert.AlertStatus.Acknowledged:
                 case Alert.AlertStatus.Escalated:
-                    PagerDutyIncident incident = PagerDuty.CreateIncident(toSend);
+                    // https://rumblegames.slack.com/archives/D0211U9PSBE/p1696528095037499
+                    // Eric Sheris: can alert service 107 and 207 fire to low pri instead of high pri?
+                    PagerDutyIncident incident = PagerDuty.CreateIncident(toSend, level: PlatformEnvironment.IsProd
+                        ? PagerDuty.Urgency.RedAlert
+                        : PagerDuty.Urgency.YellowAlert
+                    );
                     if (incident == null)
                         Log.Warn(Owner.Will, "Potentially failed to create PD incident; requires investigation.", data: new
                         {
