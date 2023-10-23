@@ -9,7 +9,7 @@
   - |-
     PAYLOAD=$(cat << JSON
     {
-      "text": "Deploy Started '$CI_PROJECT_NAME' - <a href=\"$CI_PROJECT_PATH/-/commit/$CI_COMMIT_SHA\">Git Commit</a> - <a href=\"$CI_PIPELINE_URL\">Pipeline Url</a>",
+      "text": "Deploy Started '$CI_PROJECT_NAME' - <a href=\"$CI_PROJECT_URL/-/commit/$CI_COMMIT_SHA\">Git Commit</a> - <a href=\"$CI_PIPELINE_URL\">Pipeline Url</a>",
       "tags": [
         "deployment",
         "$CI_ENVIRONMENT_NAME"
