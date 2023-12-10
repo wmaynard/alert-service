@@ -40,7 +40,7 @@ public class TopController : PlatformController
             case Alert.AlertStatus.Escalated:
             case Alert.AlertStatus.PendingResend:
                 existing.Trigger.Count++;
-                if (existing.LastSent == Timestamp.UnixTime - RESEND_INTERVAL)
+                if (existing.LastSent == Timestamp.Now - RESEND_INTERVAL)
                     existing.Status = Alert.AlertStatus.PendingResend;
                 _alerts.Update(existing);
                 return Ok(existing);

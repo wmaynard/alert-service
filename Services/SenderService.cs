@@ -32,7 +32,7 @@ public class SenderService : MinqTimerService<Alert>
             .Where(query => query
                 .NotContainedIn(alert => alert.Status, new [] { Alert.AlertStatus.Sent, Alert.AlertStatus.Resolved, Alert.AlertStatus.Canceled })
                 .NotEqualTo(alert => alert.Escalation, Alert.EscalationLevel.Final) // Should we re-notify?
-                .LessThanOrEqualTo(alert => alert.SendAfter, Timestamp.UnixTime)
+                .LessThanOrEqualTo(alert => alert.SendAfter, Timestamp.Now)
                 .GreaterThanOrEqualToRelative(alert => alert.Trigger.Count, alert => alert.Trigger.CountRequired)
             )
             .ToList();
@@ -78,7 +78,7 @@ public class SenderService : MinqTimerService<Alert>
                 .Where(query => query
                     .EqualTo(alert => alert.Status, Alert.AlertStatus.Pending)
                     .LessThanRelative(alert => alert.Trigger.Count, alert => alert.Trigger.CountRequired)
-                    .LessThan(alert => alert.Expiration, Timestamp.UnixTime - (CYCLE_TIME * 3)) // allow a grace period to guarantee we don't close alerts too early.
+                    .LessThan(alert => alert.Expiration, Timestamp.Now - (CYCLE_TIME * 3)) // allow a grace period to guarantee we don't close alerts too early.
                 )
                 .Update(query => query.Set(alert => alert.Status, Alert.AlertStatus.TriggerNotMet));
         }
@@ -107,14 +107,14 @@ public class SenderService : MinqTimerService<Alert>
                     break;
             }
             
-            alert.LastSent = Timestamp.UnixTime;
+            alert.LastSent = Timestamp.Now;
             alert.Status = alert.Status switch
             {
                 Alert.AlertStatus.Pending => Alert.AlertStatus.Sent,
                 Alert.AlertStatus.PendingResend => Alert.AlertStatus.Escalated,
                 _ => alert.Status
             };
-            alert.SendAfter = Timestamp.UnixTime + Alert.SECONDS_BEFORE_ESCALATION;
+            alert.SendAfter = Timestamp.Now + Alert.SECONDS_BEFORE_ESCALATION;
             Log.Error(alert.Owner, $"Alert sent: {alert.Message}", data: new RumbleJson
             {
                 { "trigger", alert.Trigger },
@@ -180,7 +180,7 @@ public class SenderService : MinqTimerService<Alert>
             .SetPayload(new RumbleJson
             {
                 { "email", email },
-                { "alert", alert.JSON }
+                { "alert", alert.ToJson() }
             })
             .OnFailure(response =>
             {
