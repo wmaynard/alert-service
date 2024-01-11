@@ -24,10 +24,12 @@ public class TopController : PlatformController
     {
         Alert alert = Require<Alert>("alert");
         Alert existing = _alerts.FindLastAlert(alert);
+        
+        // Make sure count is always at least 1
+        alert.Trigger.Count = Math.Max(alert.Trigger.Count, 1);
 
         if (existing == null)
         {
-            alert.Trigger.Count++;
             _alerts.Insert(alert);
             return Ok(alert);
         }
@@ -40,7 +42,7 @@ public class TopController : PlatformController
             case Alert.AlertStatus.Escalated:
             case Alert.AlertStatus.PendingResend:
             case Alert.AlertStatus.TriggerNotMet:
-                existing.Trigger.Count++;
+                existing.Trigger.Count += alert.Trigger.Count;
                 if (existing.LastSent <= Timestamp.TwelveHoursAgo)
                     existing.Status = Alert.AlertStatus.PendingResend;
                 _alerts.Update(existing);
