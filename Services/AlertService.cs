@@ -16,12 +16,12 @@ public class AlertService : MinqService<Alert>
 {
     public AlertService() : base("alerts") { }
 
-    // TODO: Order by descending
     public Alert FindLastAlert(Alert incoming) => mongo
         .Where(query => query
             .EqualTo(alert => alert.Title, incoming.Title)
             .EqualTo(alert => alert.Message, incoming.Message)
         )
-        .ToList()
-        .MaxBy(alert => alert.CreatedOn);
+        .Sort(sort => sort.OrderByDescending(alert => alert.CreatedOn))
+        .Limit(1)
+        .FirstOrDefault();
 }
