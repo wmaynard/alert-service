@@ -73,8 +73,19 @@ public class AlertService : MinqTimerService<Alert>
             toSend.SentOn = Timestamp.Now;
 
             mongo.Update(toSend);
-            
-            Log.Local(Owner.Will, $"{toSend}", emphasis: Log.LogType.CRITICAL);
+
+            if (toSend.Owner == Owner.Default)
+                SlackDiagnostics
+                    .Log("Alert Service Incident", "An alert was fired off to PagerDuty.  Check #all-rumblelive for a PagerDuty incident.")
+                    .Attach($"Alert Details {DateTime.Now:s}", toSend.ToJson())
+                    .Send()
+                    .Wait();
+            else
+                SlackDiagnostics
+                    .Log("Alert Service Incident", "An alert was fired off to PagerDuty.  Check #all-rumblelive for a PagerDuty incident.")
+                    .Attach($"Alert Details {DateTime.Now:s}", toSend.ToJson())
+                    .DirectMessage(toSend.Owner)
+                    .Wait();
         }
     }
 }
