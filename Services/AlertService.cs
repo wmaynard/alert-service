@@ -41,6 +41,8 @@ public class AlertService : MinqTimerService<Alert>
             .EqualTo(alert => alert.Status, Alert.AlertStatus.Pending)
             .GreaterThanOrEqualToRelative(alert => alert.Trigger.Count, alert => alert.Trigger.CountRequired)
         )
+        .Limit(1_000)
+        .UpdateAndReturn(update => update.Set(alert => alert.Status, Alert.AlertStatus.PendingAndClaimed))
         .ToArray();
 
     protected override void OnElapsed()
@@ -55,37 +57,45 @@ public class AlertService : MinqTimerService<Alert>
 
         foreach (Alert toSend in outbox)
         {
-            PagerDutyIncident incident = PagerDuty.CreateIncident(toSend, level: PlatformEnvironment.IsProd
-                ? PagerDuty.Urgency.RedAlert
-                : PagerDuty.Urgency.YellowAlert
-            );
-            if (incident == null)
+            try
             {
-                Log.Warn(Owner.Will, "Potentially failed to create PD incident, alert will remain open in mongo; requires investigation.", data: new
+                PagerDutyIncident incident = PagerDuty.CreateIncident(toSend, level: PlatformEnvironment.IsProd
+                    ? PagerDuty.Urgency.RedAlert
+                    : PagerDuty.Urgency.YellowAlert
+                );
+                if (incident == null)
                 {
-                    Alert = toSend
-                });
-                continue;
+                    Log.Warn(Owner.Will, "Potentially failed to create PD incident, alert will remain open in mongo; requires investigation.", data: new
+                    {
+                        Alert = toSend
+                    });
+                    continue;
+                }
+
+                toSend.Status = Alert.AlertStatus.Sent;
+                toSend.PagerDutyEventId = incident.Id;
+                toSend.SentOn = Timestamp.Now;
+
+                mongo.Update(toSend);
+
+                if (toSend.Owner == Owner.Default)
+                    SlackDiagnostics
+                        .Log("Alert Service Incident", "An alert was fired off to PagerDuty.  Check #all-rumblelive for a PagerDuty incident.")
+                        .Attach($"Alert Details {DateTime.Now:s}", toSend.ToJson())
+                        .Send()
+                        .Wait();
+                else
+                    SlackDiagnostics
+                        .Log("Alert Service Incident", "An alert was fired off to PagerDuty.  Check #all-rumblelive for a PagerDuty incident.")
+                        .Attach($"Alert Details {DateTime.Now:s}", toSend.ToJson())
+                        .DirectMessage(toSend.Owner)
+                        .Wait();
             }
-
-            toSend.Status = Alert.AlertStatus.Sent;
-            toSend.PagerDutyEventId = incident.Id;
-            toSend.SentOn = Timestamp.Now;
-
-            mongo.Update(toSend);
-
-            if (toSend.Owner == Owner.Default)
-                SlackDiagnostics
-                    .Log("Alert Service Incident", "An alert was fired off to PagerDuty.  Check #all-rumblelive for a PagerDuty incident.")
-                    .Attach($"Alert Details {DateTime.Now:s}", toSend.ToJson())
-                    .Send()
-                    .Wait();
-            else
-                SlackDiagnostics
-                    .Log("Alert Service Incident", "An alert was fired off to PagerDuty.  Check #all-rumblelive for a PagerDuty incident.")
-                    .Attach($"Alert Details {DateTime.Now:s}", toSend.ToJson())
-                    .DirectMessage(toSend.Owner)
-                    .Wait();
+            catch (Exception e)
+            {
+                toSend.Status = Alert.AlertStatus.Pending;
+                mongo.Update(toSend);
+            }
         }
     }
 }

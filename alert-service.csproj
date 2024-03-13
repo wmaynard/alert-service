@@ -6,7 +6,7 @@
 		<Deterministic>false</Deterministic>
 		<RootNamespace>AlertingService</RootNamespace>
 		<LangVersion>10</LangVersion>
-		<Configurations>Debug;Release;Local</Configurations>
+		<Configurations>Debug;Release;Local;UnitTest</Configurations>
 		<Platforms>AnyCPU</Platforms>
 		<PackageId>alert-service</PackageId>
 		<Authors>alert-service</Authors>
@@ -16,7 +16,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="AWSSDK.KinesisFirehose" Version="3.7.2.99" />
-		<PackageReference Include="platform-csharp-common" Version="1.3.137" />
+		<PackageReference Include="platform-csharp-common" Version="1.3.139" />
 	</ItemGroup>
 
 	<ItemGroup>
