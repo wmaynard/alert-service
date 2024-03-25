@@ -6,17 +6,6 @@
   variables:
     KUBE_CONTEXT: "platform-services/platform-services-agent:platform-services"
   script:
-  - |-
-    PAYLOAD=$(cat << JSON
-    {
-      "text": "Deploy Started '$CI_PROJECT_NAME' - <a href=\"$CI_PROJECT_URL/-/commit/$CI_COMMIT_SHA\">Git Commit</a> - <a href=\"$CI_PIPELINE_URL\">Pipeline Url</a>",
-      "tags": [
-        "deployment",
-        "$CI_ENVIRONMENT_NAME"
-      ]
-    }
-    JSON
-    )
   - echo $PAYLOAD
   - kubectl config use-context "$KUBE_CONTEXT"
   - auto-deploy check_kube_domain
@@ -24,8 +13,6 @@
   - auto-deploy ensure_namespace
   - auto-deploy initialize_tiller
   - auto-deploy create_secret
-  - >
-    curl --location --http1.1 --request POST "https://grafana.rumblegames.com/api/annotations" --header 'Content-Type: application/json' --header "Authorization: Bearer $GRAFANA_TOKEN" --data "${PAYLOAD}" || true
   - auto-deploy deploy
   after_script:
   - |-
