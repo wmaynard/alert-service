@@ -34,6 +34,12 @@
 	  <Content Include=".gitlab\stage-c.values.yaml" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<AssemblyAttribute Include="Rumble.Platform.Common.Attributes.BuildDateAttribute">
+			<_Parameter1>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
+
 	
 	<Target Name="SetSourceRevisionId" BeforeTargets="InitializeSourceControlInformation">
 		<Exec Command="git describe --long --always --exclude='*' --abbrev=40"
