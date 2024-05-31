@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MongoDB.Driver.Linq;
 using RCL.Logging;
+using Rumble.Platform.Common.Enums;
 using Rumble.Platform.Common.Exceptions;
 using Rumble.Platform.Common.Interop;
 using Rumble.Platform.Common.Minq;
@@ -59,10 +60,16 @@ public class AlertService : MinqTimerService<Alert>
         {
             try
             {
-                PagerDutyIncident incident = PagerDuty.CreateIncident(toSend, level: PlatformEnvironment.IsProd
-                    ? PagerDuty.Urgency.RedAlert
-                    : PagerDuty.Urgency.YellowAlert
-                );
+                PagerDuty.Urgency level = !PlatformEnvironment.IsProd
+                    ? PagerDuty.Urgency.YellowAlert
+                    : toSend.Severity switch
+                    {
+                        AlertSeverity.CodeYellow => PagerDuty.Urgency.YellowAlert,
+                        AlertSeverity.CodeRed => PagerDuty.Urgency.RedAlert,
+                        _ => PagerDuty.Urgency.RedAlert
+                    };
+                
+                PagerDutyIncident incident = PagerDuty.CreateIncident(toSend, level);
                 if (incident == null)
                 {
                     Log.Warn(Owner.Will, "Potentially failed to create PD incident, alert will remain open in mongo; requires investigation.", data: new
