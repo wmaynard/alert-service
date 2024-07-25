@@ -1,5 +1,21 @@
 # Alert Service
 
+A system for issuing pager events for on-call engineers.  Previously used for Slack and Email notifications as well.
+
+## Acknowledgment
+
+Alert Service was originally created for Rumble Entertainment (which later became R Studios), a mobile gaming company.  The service was responsible for paging the on-call engineers for 24/7 support.
+
+R Studios unfortunately closed its doors in July 2024.  This project has been released as open source with permission.
+
+As of this writing, there may still be existing references to Rumble's resources, such as Confluence links, but their absence doesn't have any significant impact.  Some documentation will also be missing until it can be recreated here, since with the company closure any feature specs and explainer articles originally written for Confluence / Slack channels were lost.
+
+While Rumble is shutting down, I'm grateful for the opportunities and human connections I had working there.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE.txt) file for details.
+
 ## Introduction
 
 Good logging is always a great tool for diagnosing issues.  Clear logs reduce the amount of time it takes to find an issue - sometimes making it near-instantaneous to find problematic code - but even the best logs need to be inspected to be useful.  At Rumble, we have a comprehensive weekly review and a daily email summary to help surface worrying trends as they happen - but sometimes even this falls short of what's needed.
